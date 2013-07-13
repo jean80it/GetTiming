@@ -12,18 +12,25 @@ namespace GetTiming
         {
             const int times = 10;
 
-            if (args.Length != 1)
+            if (args.Length < 1)
             {
-                Console.WriteLine("usage: getTiming [execfilename]");
+                Console.WriteLine("usage: getTiming [exe filename] [exe params]");
                 return;
             }
 
-            if (File.Exists("clean.cmd"))
+            List<string> parametersList = new List<string>(args);
+            parametersList.RemoveAt(0);
+            string paramsString = "";
+            foreach (string s in parametersList)
             {
-                Process.Start("clean.cmd").WaitForExit();    
+                paramsString += s + " ";
             }
 
+            Console.WriteLine("Executing '{0}' with parameters '{1}'", args[0], paramsString);
+
             ProcessStartInfo psi = new ProcessStartInfo(args[0]);
+            psi.Arguments = paramsString;
+
             Stopwatch sw = new Stopwatch();
 
             Thread.Sleep(400); // wait for system to settle
@@ -32,6 +39,10 @@ namespace GetTiming
             {
                 for (int i = 0; i < times; ++i)
                 {
+                    if (File.Exists("clean.cmd"))
+                    {
+                        Process.Start("clean.cmd").WaitForExit();
+                    }
 
                     sw.Start();
                     Process.Start(psi).WaitForExit();
