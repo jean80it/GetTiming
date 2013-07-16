@@ -68,11 +68,13 @@ namespace GetTiming
             long frequency = Stopwatch.Frequency;
             Console.WriteLine("  Timer frequency in ticks per second = {0}",
                 frequency);
-            long nanosecPerTick = (1000L * 1000L * 1000L) / frequency;
+            double nanosecPerTick = (double)1000000000 / (double)frequency;
             Console.WriteLine("  Timer is accurate within {0} nanoseconds",
                 nanosecPerTick);
 
-            Console.WriteLine("Process average execution time: {0} ns", (sw.ElapsedTicks * nanosecPerTick));
+            var avgTime = (sw.ElapsedTicks * nanosecPerTick) / (double)times;
+
+            Console.WriteLine("Process average execution time: {0:0} ns ({1:0.000000} s)", avgTime, avgTime / (double)1000000000);
         }
     }
 }
