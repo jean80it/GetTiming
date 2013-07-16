@@ -72,7 +72,7 @@ namespace GetTiming
             Console.WriteLine("  Timer is accurate within {0} nanoseconds",
                 nanosecPerTick);
 
-            Console.WriteLine("Process average execution time: {0} ns", (sw.ElapsedTicks * 1000000L / (long)times) / frequency);
+            Console.WriteLine("Process average execution time: {0} ns", (sw.ElapsedTicks * nanosecPerTick));
         }
     }
 }
