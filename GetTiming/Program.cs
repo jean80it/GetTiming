@@ -35,18 +35,22 @@ namespace GetTiming
 
             Thread.Sleep(400); // wait for system to settle
 
+            TimeSpan totalTime = new TimeSpan();
+
             try
             {
                 for (int i = 0; i < times; ++i)
                 {
                     if (File.Exists("clean.cmd"))
                     {
-                        Process.Start("clean.cmd").WaitForExit();
+                        Process.Start("clean.cmd").WaitForExit(); Process p;
                     }
 
                     sw.Start();
-                    Process.Start(psi).WaitForExit();
+                    var proc = Process.Start(psi);
+                    proc.WaitForExit();
                     sw.Stop();
+                    totalTime += proc.TotalProcessorTime;
                 }
             }
             catch(Exception e)
@@ -73,8 +77,10 @@ namespace GetTiming
                 nanosecPerTick);
 
             var avgTime = (sw.ElapsedTicks * nanosecPerTick) / (double)times;
+            var procTime = totalTime.Milliseconds / (double)times;
 
             Console.WriteLine("Process average execution time: {0:0} ns ({1:0.000000} s)", avgTime, avgTime / (double)1000000000);
+            Console.WriteLine("Process average processor time: {0:0.000} ms", procTime);
         }
     }
 }
