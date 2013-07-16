@@ -43,7 +43,7 @@ namespace GetTiming
                 {
                     if (File.Exists("clean.cmd"))
                     {
-                        Process.Start("clean.cmd").WaitForExit(); Process p;
+                        Process.Start("clean.cmd").WaitForExit(); 
                     }
 
                     sw.Start();
