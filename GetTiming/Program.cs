@@ -73,7 +73,7 @@ namespace GetTiming
             Console.WriteLine("  Timer frequency in ticks per second = {0}",
                 frequency);
             double nanosecPerTick = (double)1000000000 / (double)frequency;
-            Console.WriteLine("  Timer is accurate within {0} nanoseconds",
+            Console.WriteLine("  Timer is accurate within {0:0} nanoseconds",
                 nanosecPerTick);
 
             var avgTime = (sw.ElapsedTicks * nanosecPerTick) / (double)times;
