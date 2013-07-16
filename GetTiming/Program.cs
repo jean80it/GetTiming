@@ -12,9 +12,24 @@ namespace GetTiming
         {
             const int times = 10;
 
+            long frequency = Stopwatch.Frequency;
+            double nanosecPerTick = (double)1000000000 / (double)frequency;
+
             if (args.Length < 1)
             {
                 Console.WriteLine("usage: getTiming [exe filename] [exe params]");
+                Console.WriteLine();
+                // Display the timer frequency and resolution. 
+                if (Stopwatch.IsHighResolution)
+                {
+                    Console.WriteLine("Operations timed using the system's high-resolution performance counter.");
+                }
+                else
+                {
+                    Console.WriteLine("Operations timed using the DateTime class.");
+                }
+                Console.WriteLine("  Timer frequency in ticks per second = {0}", frequency);
+                Console.WriteLine("  Timer is accurate within {0:0} nanoseconds", nanosecPerTick);
                 return;
             }
 
@@ -35,7 +50,12 @@ namespace GetTiming
 
             Thread.Sleep(400); // wait for system to settle
 
-            TimeSpan totalTime = new TimeSpan();
+            TimeSpan totalProcTime = new TimeSpan();
+
+            long totalExecTime = 0;
+
+            long minTime = long.MaxValue;
+            long maxTime = long.MinValue;
 
             try
             {
@@ -46,11 +66,26 @@ namespace GetTiming
                         Process.Start("clean.cmd").WaitForExit(); 
                     }
 
+                    sw.Reset();
                     sw.Start();
                     var proc = Process.Start(psi);
                     proc.WaitForExit();
                     sw.Stop();
-                    totalTime += proc.TotalProcessorTime;
+                    
+                    totalProcTime += proc.TotalProcessorTime;
+                    totalExecTime += sw.ElapsedTicks;
+
+                    if (sw.ElapsedTicks > maxTime)
+                    {
+                        maxTime = sw.ElapsedTicks;
+                    }
+                    else
+                    {
+                        if (sw.ElapsedTicks < minTime)
+                        {
+                            minTime = sw.ElapsedTicks;
+                        }
+                    }
                 }
             }
             catch(Exception e)
@@ -59,28 +94,12 @@ namespace GetTiming
                 return;
             }
 
-            // Display the timer frequency and resolution. 
-            if (Stopwatch.IsHighResolution)
-            {
-                Console.WriteLine("Operations timed using the system's high-resolution performance counter.");
-            }
-            else
-            {
-                Console.WriteLine("Operations timed using the DateTime class.");
-            }
+            var avgExecTime = (((double)(totalExecTime - minTime) - maxTime) * (double)nanosecPerTick) / (double)(times - 2);
 
-            long frequency = Stopwatch.Frequency;
-            Console.WriteLine("  Timer frequency in ticks per second = {0}",
-                frequency);
-            double nanosecPerTick = (double)1000000000 / (double)frequency;
-            Console.WriteLine("  Timer is accurate within {0:0} nanoseconds",
-                nanosecPerTick);
+            var avgProcTime = totalProcTime.TotalMilliseconds / (double)times;
 
-            var avgTime = (sw.ElapsedTicks * nanosecPerTick) / (double)times;
-            var procTime = totalTime.TotalMilliseconds / (double)times;
-
-            Console.WriteLine("Process average execution time: {0:0} ns ({1:0.000000} s)", avgTime, avgTime / (double)1000000000);
-            Console.WriteLine("Process average processor time: {0:0.000} ms", procTime);
+            Console.WriteLine("v: {0,11:###########} / -: {1,11:###########} / ^: {2,11:###########} / p: {3,11:###########} \n\n", minTime * (double)nanosecPerTick, avgExecTime, maxTime * (double)nanosecPerTick, avgProcTime * 1000);
+            
         }
     }
 }
