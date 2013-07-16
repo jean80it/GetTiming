@@ -77,7 +77,7 @@ namespace GetTiming
                 nanosecPerTick);
 
             var avgTime = (sw.ElapsedTicks * nanosecPerTick) / (double)times;
-            var procTime = totalTime.Milliseconds / (double)times;
+            var procTime = totalTime.TotalMilliseconds / (double)times;
 
             Console.WriteLine("Process average execution time: {0:0} ns ({1:0.000000} s)", avgTime, avgTime / (double)1000000000);
             Console.WriteLine("Process average processor time: {0:0.000} ms", procTime);
