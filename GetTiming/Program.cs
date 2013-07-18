@@ -130,8 +130,6 @@ options:
 
             Stopwatch sw = new Stopwatch();
 
-            Thread.Sleep(400); // wait for system to settle
-
             TimeSpan totalProcTime = new TimeSpan();
 
             long totalExecTime = 0;
@@ -149,6 +147,9 @@ options:
                     }
 
                     sw.Reset();
+                    
+                    Thread.Sleep(400); // wait for system to settle
+
                     sw.Start();
                     var proc = Process.Start(psi);
                     proc.WaitForExit();
