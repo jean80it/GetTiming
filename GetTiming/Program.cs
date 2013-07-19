@@ -12,7 +12,8 @@ namespace GetTiming
         { 
             ExpectingParam,
             ParseNExecutions,
-            ParseExeAndParams
+            ParseExeAndParams,
+            ParsePreClean
         }
 
         static void Main(string[] args)
@@ -30,17 +31,20 @@ options:
  -h  prints header
  -w  forces execution with no console
  -n  sets number of executions
+ -p  specifies exe or script to prepare for each execution
  -e  must be last param; specifies excutable and params to execute
 ");
                 return;
             }
 
-            var parseState = ArgsParserState.ExpectingParam;
+            ArgsParserState parseState = ArgsParserState.ExpectingParam;
+            
             bool nowin = false;
             int nExec = 10;
+            
             string exeName = null;
-
-            List<string> exeParams = null;
+            string paramsString = "";
+            string preCleanExe = null;
 
             int paramsPos = 0;
 
@@ -79,6 +83,10 @@ options:
                                 nowin = true;
                                 break;
 
+                            case "-p":
+                                parseState = ArgsParserState.ParsePreClean;
+                                break;
+
                             case "-e":
                                 parseState = ArgsParserState.ParseExeAndParams;
                                 break;
@@ -99,9 +107,18 @@ options:
                         parseState = ArgsParserState.ExpectingParam;
                         break;
 
+                    case ArgsParserState.ParsePreClean:
+                        preCleanExe = s;
+                        parseState = ArgsParserState.ExpectingParam;
+                        break;
+
                     case ArgsParserState.ParseExeAndParams:
+                        ++paramsPos;
                         exeName = s;
-                        exeParams = (new List<string>(args)).GetRange(paramsPos, args.Length - paramsPos);
+                        foreach (string p in (new List<string>(args)).GetRange(paramsPos, args.Length - paramsPos))
+                        {
+                            paramsString += p + " ";
+                        }
                         done = true; // we won't return to any other state (anything following is parameters to measured exe)
                         break;
                 }
@@ -115,12 +132,6 @@ options:
             {
                 Console.WriteLine("no exe name specified!");
                 return;
-            }
-
-            string paramsString = "";
-            foreach (string s in exeParams)
-            {
-                paramsString += s + " ";
             }
 
             List<long> times = new List<long>(nExec);
@@ -141,9 +152,9 @@ options:
             {
                 for (int i = 0; i < nExec; ++i)
                 {
-                    if (File.Exists("clean.cmd"))
+                    if ((!string.IsNullOrEmpty(preCleanExe)) && File.Exists(preCleanExe))
                     {
-                        Process.Start("clean.cmd").WaitForExit(); 
+                        Process.Start(preCleanExe).WaitForExit(); 
                     }
 
                     sw.Reset();
@@ -151,7 +162,7 @@ options:
                     Thread.Sleep(400); // wait for system to settle
 
                     sw.Start();
-                    var proc = Process.Start(psi);
+                    Process proc = Process.Start(psi);
                     proc.WaitForExit();
                     sw.Stop();
 
@@ -192,11 +203,11 @@ options:
             }
             
 
-            var avgExecTime = (((double)(totalExecTime - minTime) - maxTime) * (double)nanosecPerTick) / (double)(nExec - 2);
+            double avgExecTime = (((double)(totalExecTime - minTime) - maxTime) * (double)nanosecPerTick) / (double)(nExec - 2);
 
-            var avgProcTime = totalProcTime.TotalMilliseconds / (double)nExec;
+            double avgProcTime = totalProcTime.TotalMilliseconds / (double)nExec;
 
-            Console.WriteLine("{0,11:##########}|{1,11:###########}|{2,11:###########}|{3,11:###########}|{4,11:###########}|{5,11:###########}", exeName, minTime * nanosecPerTick, avgExecTime, median * nanosecPerTick, maxTime * nanosecPerTick, avgProcTime * 1000);
+            Console.WriteLine("{0,11:##########}|{1,11:###########}|{2,11:###########}|{3,11:###########}|{4,11:###########}|{5,11:###########}", exeName.Substring(0, Math.Min(10, exeName.Length)), minTime * nanosecPerTick, avgExecTime, median * nanosecPerTick, maxTime * nanosecPerTick, avgProcTime * 1000);
             
         }
     }
